@@ -72,8 +72,22 @@ api.destroy();
 
 ## Building the plugins
 
-See each `packages/*/README.md`. The build for every host shares one
-embed bundle, so the editor source lives at the repo root.
+Every plugin shares the same embed bundle built from the repo root.
+
+### VS Code extension (VSIX)
+
+```sh
+# 1. Build the shared embed bundle
+npm run build:embed          # → dist/embed.iife.js + dist/embed.css
+
+# 2. Package the extension
+cd packages/vscode-extension
+npm run package              # → wavedrom-editor-<version>.vsix
+```
+
+Install in VS Code via **Extensions → ... → Install from VSIX**.
+
+See [`packages/vscode-extension/README.md`](packages/vscode-extension/README.md) for details.
 
 ## License
 

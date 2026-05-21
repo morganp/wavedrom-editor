@@ -16,16 +16,24 @@ packages/vscode-extension/
 
 ## Build
 
-The webview hosts the same React app that lives at the repo root. The build
-step compiles those files to plain JS (no Babel-in-browser, pinned React) and
-copies them into `media/`, then `tsc` compiles the extension itself.
+The webview hosts the React app from the repo root compiled to a plain IIFE bundle.
+`build:webview` expects `dist/embed.iife.js` to already exist.
 
 ```sh
-# from repo root
-npm run -w packages/vscode-extension build:webview   # → media/*.js
-npm run -w packages/vscode-extension compile         # → out/extension.js
-npm run -w packages/vscode-extension package         # → wavedrom-editor-0.4.0.vsix
+# from repo root — build the shared embed bundle first
+npm run build:embed
+
+# then package the extension
+cd packages/vscode-extension
+npm run package          # → wavedrom-editor-<version>.vsix
 ```
+
+`npm run package` triggers `vscode:prepublish` automatically:
+1. `build:webview` copies `dist/embed.iife.js` → `media/embed.js` and `embed.css`
+2. `compile` runs `tsc` → `out/extension.js`
+3. `vsce package` produces the `.vsix`
+
+Install via **Extensions → ... → Install from VSIX**.
 
 ## Two activation paths
 
