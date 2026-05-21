@@ -5,7 +5,7 @@
   "version": "0.4.20",
   "publisher": "Lizard-Spock",
   "license": "MIT",
-  "repository": { "type": "git", "url": "https://github.com/example/wavedrom-editor" },
+  "repository": { "type": "git", "url": "https://github.com/morganp/wavedrom-editor" },
   "engines": { "vscode": "^1.85.0" },
   "categories": ["Visualization", "Other"],
   "keywords": ["wavedrom", "timing", "diagram", "waveform", "verilog", "hdl"],
