@@ -103,5 +103,5 @@
     };
   }
 
-  window.WavedromEditor = { mount, postMessageHost, version: '0.4.0' };
+  window.WavedromEditor = { mount, postMessageHost, version: '0.4.1' };
 })();

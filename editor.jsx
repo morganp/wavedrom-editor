@@ -79,11 +79,43 @@ function totalCycles(spec) {
 }
 
 // ── App ────────────────────────────────────────────────────────────
+function detectIndent(str) {
+  if (!str) return 2;
+  const m = str.match(/\n(\s+)/);
+  if (!m) return 0;
+  return m[1][0] === '\t' ? '\t' : m[1].length;
+}
+
+// Serialize with indentation but keep small objects/arrays inline.
+function jsonStringify(value, indent, depth = 0) {
+  if (!indent) return JSON.stringify(value);
+  if (value === null || typeof value !== 'object') return JSON.stringify(value);
+  const compact = JSON.stringify(value);
+  if (compact.length <= 80) return compact;
+  const isArr = Array.isArray(value);
+  const unit = typeof indent === 'number' ? ' '.repeat(indent) : indent;
+  const pad = unit.repeat(depth + 1);
+  const outer = unit.repeat(depth);
+  if (isArr) {
+    const items = value.map(v => pad + jsonStringify(v, indent, depth + 1));
+    return '[\n' + items.join(',\n') + '\n' + outer + ']';
+  }
+  const items = Object.entries(value).map(([k, v]) =>
+    pad + JSON.stringify(k) + ': ' + jsonStringify(v, indent, depth + 1));
+  return '{\n' + items.join(',\n') + '\n' + outer + '}';
+}
+
 function App({ initial, onChange, onCommand, embedded, readonly, bridge } = {}) {
   const [t, setTweak] = useTweaks({ cw: 40, rowH: 40, snap: 1 });
-  const [spec, setSpec] = useState(() => ensureIds(initial != null
-    ? (typeof initial === 'string' ? JSON.parse(initial) : initial)
-    : SAMPLES[3].spec));
+  const indent = useRef(typeof initial === 'string' ? detectIndent(initial) : 2);
+  const [spec, setSpec] = useState(() => {
+    if (initial == null) return ensureIds(SAMPLES[3].spec);
+    try {
+      return ensureIds(typeof initial === 'string' ? JSON.parse(initial) : initial);
+    } catch {
+      return ensureIds(SAMPLES[3].spec);
+    }
+  });
   const [selectedId, setSelectedId] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(true);
   const [jsonText, setJsonText] = useState('');
@@ -98,6 +130,8 @@ function App({ initial, onChange, onCommand, embedded, readonly, bridge } = {}) 
     return Number.isFinite(saved) && saved > 80 ? saved : 260;
   });
   useEffect(() => { localStorage.setItem('wde.drawerH', String(drawerH)); }, [drawerH]);
+
+  const mountedRef = useRef(false);
 
   // History
   const history = useRef([]);
@@ -128,15 +162,14 @@ function App({ initial, onChange, onCommand, embedded, readonly, bridge } = {}) 
   // JSON sync — when spec changes, regenerate JSON text (without ids)
   useEffect(() => {
     const stripped = stripIds(spec);
-    const text = JSON.stringify(stripped, null, 2);
+    const text = jsonStringify(stripped, indent.current);
     setJsonText(text);
     setJsonError(null);
-    // Notify host (embedded mode). Skip the initial mount notification
-    // unless explicitly wanted — but we *do* fire on every spec change
-    // since the host wants to track edits.
-    if (onChange) {
+    // Skip onChange on initial mount — host already has the source content.
+    if (onChange && mountedRef.current) {
       try { onChange(stripped, text); } catch (e) { /* host handler bug */ }
     }
+    mountedRef.current = true;
   }, [spec, onChange]);
 
   // External setJson via the bridge (host-driven update). We mark the change

@@ -345,8 +345,8 @@ function WaveRow({ r, h, cw, cycles, totalW, snap, selected, onSelect, setWave, 
           );
         })}
 
-        {/* transition handles */}
-        {transitions.map((tr, i) => {
+        {/* transition handles — only show where the edge can actually be moved */}
+        {transitions.filter(tr => tr.movable).map((tr, i) => {
           const x = -phase * cw + tr.charIndex * cw * period;
           return (
             <rect key={'tr-' + i}
@@ -606,6 +606,30 @@ function Drawer({ open, setOpen, text, setText, apply, error, height, setHeight 
 
 // ── Inspector ──────────────────────────────────────────────────
 function Inspector({ spec, id, patchSig, setWave, close, deleteSignal }) {
+  const pos = uR(null); // {x, y} — null = use CSS default
+  const drag = uR(null); // {startX, startY, ox, oy}
+  const [, forceUpdate] = uS(0);
+
+  const onMouseDown = (e) => {
+    if (e.button !== 0) return;
+    const cur = pos.current || { x: window.innerWidth - 252, y: 56 };
+    drag.current = { startX: e.clientX, startY: e.clientY, ox: cur.x, oy: cur.y };
+    const onMove = (e2) => {
+      const nx = drag.current.ox + e2.clientX - drag.current.startX;
+      const ny = drag.current.oy + e2.clientY - drag.current.startY;
+      pos.current = { x: Math.max(0, nx), y: Math.max(0, ny) };
+      forceUpdate(n => n + 1);
+    };
+    const onUp = () => {
+      drag.current = null;
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    e.preventDefault();
+  };
+
   // find sig
   let sig = null;
   const visit = (n) => {
@@ -619,9 +643,13 @@ function Inspector({ spec, id, patchSig, setWave, close, deleteSignal }) {
   const phase = sig.phase || 0;
   const data = sig.data ? (Array.isArray(sig.data) ? sig.data.join(' ') : sig.data) : '';
 
+  const style = pos.current
+    ? { left: pos.current.x, top: pos.current.y, right: 'auto' }
+    : undefined;
+
   return (
-    <div className="inspector" onClick={(e) => e.stopPropagation()}>
-      <h4>Signal · {sig.name}</h4>
+    <div className="inspector" style={style} onClick={(e) => e.stopPropagation()}>
+      <h4 onMouseDown={onMouseDown} style={{ cursor: 'grab' }}>Signal · {sig.name}</h4>
       <div className="insp-row"><label>Name</label>
         <input value={sig.name || ''} onChange={(e) => patchSig(id, { name: e.target.value })} />
       </div>

@@ -5,7 +5,7 @@ import ReactDOM from 'react-dom/client';
 import { App } from './editor.jsx';
 import './styles.css';
 
-const version = '0.4.0';
+const version = '0.4.1';
 
 function mount(rootEl, opts) {
   opts = opts || {};

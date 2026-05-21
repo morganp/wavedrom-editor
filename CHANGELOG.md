@@ -3,6 +3,12 @@
 All notable changes to this project are documented here.
 Versions follow [Semantic Versioning](https://semver.org).
 
+## [0.4.1] — 2026-05-21
+
+### VS Code extension
+- Fix blank fenced-block editor: removed `await openTextDocument` that delayed `onDidReceiveMessage` registration, causing `hello` to arrive before the handler was ready.
+- Guard `JSON.parse` of `initial` prop in `App` — invalid/empty JSON now falls back to default sample instead of crashing render.
+
 ## [0.4.0] — 2026-05-21
 Phase 1 implementation begins: shared embed SDK + plugin scaffolding.
 

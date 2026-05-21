@@ -35,26 +35,33 @@ export function activate(ctx: vscode.ExtensionContext) {
     }),
 
     vscode.commands.registerCommand('wavedrom.editFencedBlock',
-      async (uri: vscode.Uri, range: vscode.Range, source: string) => {
-        // Phase 2 — open a webview panel scoped to this fenced block.
-        // The panel uses the same embed SDK; on save we write the new JSON
-        // back into the document at `range`.
+      (uri: vscode.Uri, range: vscode.Range, source: string) => {
         const panel = vscode.window.createWebviewPanel(
           'wavedrom.fencedBlock',
           'WaveDrom (fenced block)',
           vscode.ViewColumn.Beside,
-          { enableScripts: true, retainContextWhenHidden: true }
+          {
+            enableScripts: true,
+            retainContextWhenHidden: true,
+            localResourceRoots: [vscode.Uri.joinPath(ctx.extensionUri, 'media')],
+          }
         );
-        const doc = await vscode.workspace.openTextDocument(uri);
-        const initial = source;
-
         panel.webview.html = WavedromEditorProvider.getHtml(ctx, panel.webview);
+        // Capture only the start position — the end moves as content changes.
+        const contentStart = range.start;
         panel.webview.onDidReceiveMessage(async (m) => {
           if (m.type === 'hello') {
-            panel.webview.postMessage({ type: 'init', payload: { initial } });
+            panel.webview.postMessage({ type: 'init', payload: { initial: normalizeJson(source) } });
           } else if (m.type === 'change') {
+            const doc = await vscode.workspace.openTextDocument(uri);
+            // Re-scan from contentStart to find the current closing fence.
+            let endLine = contentStart.line;
+            while (endLine < doc.lineCount && doc.lineAt(endLine).text.trimEnd() !== '```') {
+              endLine++;
+            }
+            const currentRange = new vscode.Range(contentStart, new vscode.Position(endLine, 0));
             const edit = new vscode.WorkspaceEdit();
-            edit.replace(uri, range, m.payload.jsonText);
+            edit.replace(uri, currentRange, m.payload.jsonText + '\n');
             await vscode.workspace.applyEdit(edit);
           }
         });
@@ -64,6 +71,46 @@ export function activate(ctx: vscode.ExtensionContext) {
 }
 
 export function deactivate() {}
+
+// WaveDrom files often use relaxed JS object syntax (unquoted keys).
+// Normalize to strict JSON on the extension host so the webview gets valid JSON.
+function detectIndent(source: string): string | number {
+  const m = source.match(/\n(\s+)/);
+  if (!m) return 0;
+  return m[1][0] === '\t' ? '\t' : m[1].length;
+}
+
+function jsonStringify(value: unknown, indent: string | number, depth = 0): string {
+  if (!indent) return JSON.stringify(value);
+  if (value === null || typeof value !== 'object') return JSON.stringify(value);
+  const compact = JSON.stringify(value);
+  if ((compact?.length ?? 0) <= 80) return compact ?? 'null';
+  const unit = typeof indent === 'number' ? ' '.repeat(indent) : indent;
+  const pad = unit.repeat(depth + 1);
+  const outer = unit.repeat(depth);
+  if (Array.isArray(value)) {
+    const items = value.map((v: unknown) => pad + jsonStringify(v, indent, depth + 1));
+    return '[\n' + items.join(',\n') + '\n' + outer + ']';
+  }
+  const items = Object.entries(value as Record<string, unknown>).map(([k, v]) =>
+    pad + JSON.stringify(k) + ': ' + jsonStringify(v, indent, depth + 1));
+  return '{\n' + items.join(',\n') + '\n' + outer + '}';
+}
+
+function normalizeJson(source: string): string {
+  try {
+    JSON.parse(source);
+    return source;
+  } catch {
+    try {
+      // eslint-disable-next-line no-new-func
+      const obj = new Function('return (' + source + ')')();
+      return jsonStringify(obj, detectIndent(source));
+    } catch {
+      return source;
+    }
+  }
+}
 
 function getNonce(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -81,7 +128,10 @@ class WavedromEditorProvider implements vscode.CustomTextEditorProvider {
     panel: vscode.WebviewPanel,
     _token: vscode.CancellationToken
   ): Promise<void> {
-    panel.webview.options = { enableScripts: true };
+    panel.webview.options = {
+      enableScripts: true,
+      localResourceRoots: [vscode.Uri.joinPath(this.ctx.extensionUri, 'media')],
+    };
     panel.webview.html = WavedromEditorProvider.getHtml(this.ctx, panel.webview);
 
     // External edits to the file → push to the webview, unless they were ours.
@@ -98,7 +148,7 @@ class WavedromEditorProvider implements vscode.CustomTextEditorProvider {
         case 'hello':
           panel.webview.postMessage({
             type: 'init',
-            payload: { initial: document.getText() },
+            payload: { initial: normalizeJson(document.getText()) },
           });
           break;
         case 'change': {
@@ -131,30 +181,34 @@ class WavedromEditorProvider implements vscode.CustomTextEditorProvider {
 <head>
   <meta charset="utf-8" />
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'none'; img-src ${webview.cspSource} data:; style-src ${webview.cspSource} 'unsafe-inline'; script-src ${webview.cspSource} 'nonce-${nonce}';" />
+        content="default-src 'none'; img-src ${webview.cspSource} data:; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}' ${webview.cspSource};" />
   <link rel="stylesheet" href="${uri('embed.css')}" />
-  <style>
-    :root {
-      --bg:     var(--vscode-editor-background, #fafaf7);
-      --panel:  var(--vscode-editorWidget-background, #ffffff);
-      --ink:    var(--vscode-editor-foreground, #1f2328);
-      --ink-2:  var(--vscode-descriptionForeground, #4a5057);
-      --ink-3:  var(--vscode-disabledForeground, #8a8f96);
-      --line:   var(--vscode-editorWidget-border, #e7e6e1);
-      --line-2: var(--vscode-panel-border, #ededea);
-      --accent: var(--vscode-focusBorder, #2860b8);
-      --warn:   var(--vscode-editorWarning-foreground, #b8702c);
-    }
-  </style>
 </head>
 <body>
+  <pre id="dbg" style="font:11px monospace;padding:4px;background:#222;color:#0f0;max-height:60px;overflow:auto">WaveDrom Visual Editor v0.4.20</pre>
   <div id="root"></div>
-  <script src="${uri('embed.js')}"></script>
+  <script nonce="${nonce}" src="${uri('embed.js')}"></script>
   <script nonce="${nonce}">
     const vscode = acquireVsCodeApi();
-    WavedromEditor.postMessageHost(document.getElementById('root'), {
-      targetWindow: { postMessage: (m) => vscode.postMessage(m) },
+    const dbg = document.getElementById('dbg');
+    let editorApi = null;
+    window.addEventListener('message', function(ev) {
+      const m = ev.data;
+      if (!m || typeof m !== 'object') return;
+      if (m.type === 'init') {
+        const initial = m.payload && m.payload.initial;
+        if (!initial) dbg.textContent += '\\nWARN: no content received';
+        editorApi = WavedromEditor.mount(document.getElementById('root'), {
+          initial: initial,
+          embedded: true,
+          onChange: function(json, jsonText) { vscode.postMessage({ type: 'change', payload: { json, jsonText } }); },
+          onCommand: function(cmd) { vscode.postMessage({ type: 'command', payload: cmd }); },
+        });
+      } else if (m.type === 'setJson' && editorApi) {
+        editorApi.setJson(m.payload);
+      }
     });
+    vscode.postMessage({ type: 'hello' });
   </script>
 </body>
 </html>`;

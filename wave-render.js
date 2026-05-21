@@ -88,8 +88,15 @@
 
       // transition line at x0 between prev and this seg
       if (prev && !seg.implicit) {
-        // store transition handle for drag
-        transitions.push({ x: x0, segIndex: s, fromCh: prevCh, toCh: ch, charIndex: seg.start });
+        // movable if there is room on at least one side (dots OR same-value repetitions).
+        // canMoveLeft: fromIdx >= 2 — moveTransition always finds a passable left neighbour
+        //   (the prev segment's last pos is either '.' or prevCh, both passable), so any
+        //   transition at charIndex >= 2 can slide left to position 1 at minimum.
+        // canMoveRight: there is at least one passable char to the right (dot or same ch).
+        const canMoveLeft = seg.start >= 2;
+        const canMoveRight = seg.len > 1 || (s + 1 < segs.length && segs[s + 1].ch === ch);
+        const movable = canMoveLeft || canMoveRight;
+        transitions.push({ x: x0, segIndex: s, fromCh: prevCh, toCh: ch, charIndex: seg.start, movable });
 
         // Draw transition shape at boundary
         drawTransition(els, x0, slew, yHi, yLo, yMid, prevCh, ch);
@@ -241,23 +248,40 @@
   // Wave is a string. Snap to cycles already; caller passes int idx.
   // Returns { wave: newString, idx: actualLandingIndex } so callers can keep tracking
   // the transition across multiple drag updates.
+  //
+  // Repeated same-value chars (e.g. "000111") are treated like dots for movement —
+  // the edge can slide through them, merging adjacent duplicates as it goes.
   function moveTransition(wave, fromIdx, toIdx) {
     if (toIdx < 1 || toIdx >= wave.length) return { wave, idx: fromIdx };
-    const ch = wave[fromIdx];
-    if (!ch || ch === '.' || ch === '|') return { wave, idx: fromIdx };
     const arr = wave.split('');
-    // Find left bound (after prev non-dot char).
+    const ch = arr[fromIdx];
+    if (!ch || ch === '.' || ch === '|') return { wave, idx: fromIdx };
+
+    // Resolve prevCh: effective signal level to the left of this transition.
+    let prevPos = fromIdx - 1;
+    while (prevPos > 0 && (arr[prevPos] === '.' || arr[prevPos] === '|')) prevPos--;
+    const prevCh = (arr[prevPos] === '.' || arr[prevPos] === '|') ? null : arr[prevPos];
+
+    // Left bound: can slide through dots, pipes, and prevCh repetitions.
     let left = fromIdx - 1;
-    while (left > 0 && (arr[left] === '.' || arr[left] === '|')) left--;
-    const leftBound = left + 1; // can't overlap prev segment's char position
-    // Find right bound (before next non-dot char).
+    while (left > 0 && (arr[left] === '.' || arr[left] === '|' || arr[left] === prevCh)) left--;
+    const leftBound = (arr[left] === '.' || arr[left] === '|' || arr[left] === prevCh) ? 1 : left + 1;
+
+    // Right bound: can slide through dots, pipes, and ch repetitions.
     let right = fromIdx + 1;
-    while (right < arr.length && (arr[right] === '.' || arr[right] === '|')) right++;
+    while (right < arr.length && (arr[right] === '.' || arr[right] === '|' || arr[right] === ch)) right++;
     const rightBound = right - 1;
+
     const target = Math.max(leftBound, Math.min(rightBound, toIdx));
     if (target === fromIdx) return { wave, idx: fromIdx };
-    arr[fromIdx] = '.';
+
+    // Overwrite the entire moved range with '.' then stamp ch at target.
+    // This removes orphaned same-value chars that would otherwise create spurious segments.
+    const lo = Math.min(target, fromIdx);
+    const hi = Math.max(target, fromIdx);
+    for (let i = lo; i <= hi; i++) arr[i] = '.';
     arr[target] = ch;
+
     return { wave: arr.join(''), idx: target };
   }
 
