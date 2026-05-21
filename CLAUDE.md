@@ -41,6 +41,7 @@ Install in VS Code via **Extensions → ... → Install from VSIX**.
 
 - [ ] Build and test Confluence Cloud plugin (`packages/confluence-forge`)
 - [ ] Build and test Confluence Data Center / Server plugin (`packages/confluence-dc`)
+- [ ] Document which files are required to self-host / distribute the standalone web version (i.e. the minimal file set needed alongside `Wavedrom Editor.html`)
 
 ## Downloads
 - Use **semantic versioning** in download zip filenames (e.g. `Wavedrom-Editor-v0.3.0.zip`).
