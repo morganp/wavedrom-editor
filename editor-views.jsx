@@ -1,8 +1,10 @@
 // editor-views.jsx — sub-components: Toolbar, Workarea (waveform canvas),
 // Drawer, Inspector, SampleModal.
 
-const { useState: uS, useEffect: uE, useMemo: uM, useRef: uR, useCallback: uCB } = React;
-const WR = window.WaveRender;
+import React, { useState as uS, useEffect as uE, useMemo as uM, useRef as uR, useCallback as uCB } from 'react';
+import * as WR from './wave-render.js';
+import { ICONS } from './icons.jsx';
+import { SAMPLES } from './samples.js';
 
 // ── Toolbar ────────────────────────────────────────────────────
 function Toolbar(p) {
@@ -11,19 +13,19 @@ function Toolbar(p) {
       <div className="brand"><span className="dot"></span>Wavedrom Editor</div>
 
       <div className="tb-group">
-        <button className="tb-btn" title="Add signal (A)" onClick={p.addSignal}>{window.__WaveEditor.ICONS.add} Signal</button>
-        <button className="tb-btn" title="Add group" onClick={p.addGroup}>{window.__WaveEditor.ICONS.group} Group</button>
-        <button className="tb-btn" title="Delete (Del)" onClick={p.delSignal}>{window.__WaveEditor.ICONS.trash}</button>
+        <button className="tb-btn" title="Add signal (A)" onClick={p.addSignal}>{ICONS.add} Signal</button>
+        <button className="tb-btn" title="Add group" onClick={p.addGroup}>{ICONS.group} Group</button>
+        <button className="tb-btn" title="Delete (Del)" onClick={p.delSignal}>{ICONS.trash}</button>
       </div>
 
       <div className="tb-group">
-        <button className="tb-btn" title="Add cycle to all" onClick={p.addCycle}>{window.__WaveEditor.ICONS.cycleAdd} +cycle</button>
-        <button className="tb-btn" title="Remove last cycle" onClick={p.removeCycle}>{window.__WaveEditor.ICONS.cycleDel} −cycle</button>
+        <button className="tb-btn" title="Add cycle to all" onClick={p.addCycle}>{ICONS.cycleAdd} +cycle</button>
+        <button className="tb-btn" title="Remove last cycle" onClick={p.removeCycle}>{ICONS.cycleDel} −cycle</button>
       </div>
 
       <div className="tb-group">
-        <button className="tb-btn" title="Undo (⌘Z)" onClick={p.undo} disabled={!p.canUndo}>{window.__WaveEditor.ICONS.undo}</button>
-        <button className="tb-btn" title="Redo (⌘⇧Z)" onClick={p.redo} disabled={!p.canRedo}>{window.__WaveEditor.ICONS.redo}</button>
+        <button className="tb-btn" title="Undo (⌘Z)" onClick={p.undo} disabled={!p.canUndo}>{ICONS.undo}</button>
+        <button className="tb-btn" title="Redo (⌘⇧Z)" onClick={p.redo} disabled={!p.canRedo}>{ICONS.redo}</button>
       </div>
 
       <div className="tb-group" title="Snap granularity">
@@ -40,7 +42,7 @@ function Toolbar(p) {
       <div className="tb-group">
         <button className={'tb-btn' + (p.docOpen ? ' primary' : '')} onClick={p.openDoc}
           title="Document properties (head/foot/config/edges)">📄 Doc</button>
-        <button className="tb-btn" onClick={p.openSamples}>{window.__WaveEditor.ICONS.samples} Samples</button>
+        <button className="tb-btn" onClick={p.openSamples}>{ICONS.samples} Samples</button>
       </div>
       <div className="tb-group">
         <button className="tb-btn" onClick={p.saveJson} title="Download as .json">💾 Save</button>
@@ -48,8 +50,8 @@ function Toolbar(p) {
         <button className="tb-btn" onClick={p.copyJson} title="Copy JSON to clipboard">⧉ Copy</button>
       </div>
       <div className="tb-group">
-        <button className="tb-btn" onClick={p.exportSvg}>{window.__WaveEditor.ICONS.svg} SVG</button>
-        <button className="tb-btn" onClick={p.exportPng}>{window.__WaveEditor.ICONS.png} PNG</button>
+        <button className="tb-btn" onClick={p.exportSvg}>{ICONS.svg} SVG</button>
+        <button className="tb-btn" onClick={p.exportPng}>{ICONS.png} PNG</button>
       </div>
     </div>
   );
@@ -653,7 +655,7 @@ function Inspector({ spec, id, patchSig, setWave, close, deleteSignal }) {
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10 }}>
         <button className="tb-btn" onClick={() => deleteSignal(id)} style={{ color: '#b13a3a' }}>
-          {window.__WaveEditor.ICONS.trash} Delete
+          {ICONS.trash} Delete
         </button>
         <button className="tb-btn" onClick={close}>Close</button>
       </div>
@@ -668,7 +670,7 @@ function SampleModal({ close, load }) {
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <h3>Load a sample</h3>
         <div className="sample-list">
-          {window.WAVEDROM_SAMPLES.map((s) => (
+          {SAMPLES.map((s) => (
             <button key={s.id} onClick={() => load(s.id)}>
               <span>{s.label}</span>
               <span className="sub">{s.sub}</span>
@@ -1025,4 +1027,6 @@ function CycleMenu({ x, y, current, isBus, busLabel, nodeLetter, edgeDraft, sigN
   );
 }
 
-
+export {
+  Toolbar, Workarea, Drawer, Inspector, SampleModal, DocPanel, CycleMenu,
+};

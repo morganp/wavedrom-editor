@@ -1,0 +1,38 @@
+modules:
+  macro:
+    - key: wavedrom-macro
+      resource: macro-view
+      render: native
+      title: WaveDrom diagram
+      description: Embed a WaveDrom timing diagram with a visual editor.
+      icon: resource:icons/wavedrom.svg
+      config:
+        function: wavedrom-config-default
+      properties:
+        layout: full-width
+        body-format: storage
+
+  function:
+    - key: wavedrom-config-default
+      handler: index.defaultConfig
+
+resources:
+  - key: macro-view
+    path: resources/macro/
+    tunnel:
+      port: 3000
+  - key: editor-modal
+    path: resources/editor/
+  - key: icons
+    path: resources/icons/
+
+app:
+  runtime:
+    name: nodejs20.x
+  id: ari:cloud:ecosystem::app/REPLACE_WITH_REAL_APP_ID
+
+permissions:
+  scopes:
+    - storage:app
+    - read:confluence-content.summary
+    - write:confluence-content

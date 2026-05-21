@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.example.wavedrom</groupId>
+  <artifactId>wavedrom-editor</artifactId>
+  <version>0.4.0</version>
+  <packaging>atlassian-plugin</packaging>
+
+  <name>WaveDrom Editor</name>
+  <description>Visual editor for WaveDrom timing-diagram JSON in Confluence Data Center / Server.</description>
+  <organization>
+    <name>WaveDrom Editor contributors</name>
+    <url>https://github.com/example/wavedrom-editor</url>
+  </organization>
+
+  <properties>
+    <atlassian.plugin.key>${project.groupId}.${project.artifactId}</atlassian.plugin.key>
+    <confluence.version>8.5.0</confluence.version>
+    <amps.version>8.10.0</amps.version>
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.atlassian.confluence</groupId>
+      <artifactId>confluence</artifactId>
+      <version>${confluence.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- Web resource manager (for requiring resources from macro) -->
+    <dependency>
+      <groupId>com.atlassian.plugins</groupId>
+      <artifactId>atlassian-plugins-webresource</artifactId>
+      <version>4.8.0</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- Velocity template rendering in servlets -->
+    <dependency>
+      <groupId>com.atlassian.templaterenderer</groupId>
+      <artifactId>atlassian-template-renderer-api</artifactId>
+      <version>4.0.0</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- Servlet API -->
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>3.1.0</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>com.atlassian.maven.plugins</groupId>
+        <artifactId>confluence-maven-plugin</artifactId>
+        <version>${amps.version}</version>
+        <extensions>true</extensions>
+        <configuration>
+          <productVersion>${confluence.version}</productVersion>
+          <productDataVersion>${confluence.version}</productDataVersion>
+          <enableQuickReload>true</enableQuickReload>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

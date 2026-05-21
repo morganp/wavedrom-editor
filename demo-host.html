@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Wavedrom Editor — embed host demo</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: #1f2328; color: #d8d7d1; }
+    body { font: 13px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .host {
+      display: grid; grid-template-rows: 44px 1fr 240px;
+      height: 100vh;
+    }
+    .host-bar {
+      display: flex; align-items: center; gap: 10px; padding: 0 14px;
+      background: #2a2f36; border-bottom: 1px solid #3a3f47;
+    }
+    .host-bar .title { font-weight: 600; color: #f3f1ec; letter-spacing: -.005em; }
+    .host-bar .sub { color: #8a8f96; font-size: 11.5px; font-family: ui-monospace, monospace; }
+    .host-bar .grow { flex: 1; }
+    .host-bar button {
+      appearance: none; border: 1px solid #3a3f47; background: #34393f;
+      color: #d8d7d1; padding: 6px 10px; border-radius: 5px; cursor: default;
+      font: inherit;
+    }
+    .host-bar button:hover { background: #3d434a; border-color: #4d535a; }
+    .host-bar .ready-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: #c14b3d;
+      transition: background .2s;
+    }
+    .host-bar .ready-dot.loading { background: #c4a04d; animation: pulse 1.2s ease-in-out infinite; }
+    .host-bar .ready-dot.ready   { background: #46a25a; animation: none; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: .35; }
+    }
+    .host-bar .ready-text {
+      color: #8a8f96; font-size: 11.5px; font-family: ui-monospace, monospace;
+    }
+    .host-bar .ready-text.ready { color: #46a25a; }
+    .host-frame {
+      border: 0; width: 100%; height: 100%; background: #fafaf7;
+    }
+    .frame-wrap { position: relative; min-height: 0; }
+    .frame-wrap .loading-overlay {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: #fafaf7;
+      color: #8a8f96;
+      font-size: 12.5px; font-family: ui-monospace, monospace;
+      pointer-events: none; transition: opacity .25s;
+      z-index: 2;
+    }
+    .frame-wrap.ready .loading-overlay { opacity: 0; }
+    .frame-wrap .loading-overlay::before {
+      content: ""; display: inline-block; width: 10px; height: 10px;
+      border-radius: 50%; background: #c4a04d; margin-right: 8px;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    .host-log {
+      display: grid; grid-template-columns: 1fr 1fr;
+      border-top: 1px solid #3a3f47; min-height: 0;
+    }
+    .pane {
+      display: flex; flex-direction: column;
+      min-height: 0; min-width: 0;
+    }
+    .pane-head {
+      padding: 6px 12px; font-size: 11px; text-transform: uppercase;
+      letter-spacing: .06em; color: #8a8f96; border-bottom: 1px solid #3a3f47;
+      background: #25292f; display: flex; align-items: center; gap: 8px;
+    }
+    .pane-head .grow { flex: 1; }
+    .pane-head button {
+      appearance: none; background: transparent; border: 1px solid #3a3f47;
+      color: #d8d7d1; padding: 2px 6px; font-size: 10.5px;
+      border-radius: 4px; cursor: default; text-transform: none;
+      letter-spacing: 0;
+    }
+    .pane-head button:hover { background: #34393f; }
+    .pane + .pane { border-left: 1px solid #3a3f47; }
+    textarea, pre {
+      flex: 1; min-height: 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11.5px; line-height: 1.55;
+      background: #1b1f24; color: #d8d7d1;
+      border: 0; outline: 0; resize: none; padding: 10px 12px;
+      margin: 0;
+    }
+    pre { overflow: auto; white-space: pre-wrap; word-break: break-word; }
+    .log-line { padding: 1px 0; }
+    .log-line .lt { color: #6da5e8; }
+    .log-line.out .lt { color: #46a25a; }
+    .log-line.in  .lt { color: #c4a04d; }
+    .log-line .time { color: #5a6068; }
+  </style>
+</head>
+<body>
+  <div class="host">
+    <div class="host-bar">
+      <span class="ready-dot loading" id="ready"></span>
+      <span class="title">Embed host demo</span>
+      <span class="sub">iframe → postMessage → WavedromEditor.mount</span>
+      <span class="grow"></span>
+      <span class="ready-text" id="ready-text">starting editor…</span>
+      <button id="b-send">Push JSON to editor →</button>
+      <button id="b-reset">Reset to sample</button>
+    </div>
+
+    <div class="frame-wrap" id="frame-wrap">
+      <div class="loading-overlay" id="overlay">Loading editor…</div>
+      <iframe class="host-frame" id="editor" src="embed.html"></iframe>
+    </div>
+
+    <div class="host-log">
+      <div class="pane">
+        <div class="pane-head">
+          <span>JSON (host-side mirror)</span>
+          <span class="grow"></span>
+          <span id="size" class="sub" style="text-transform:none;letter-spacing:0;font-family:ui-monospace,monospace;">0 chars</span>
+        </div>
+        <textarea id="json" spellcheck="false">{
+  "signal": [
+    { "name": "clk",  "wave": "p......." },
+    { "name": "data", "wave": "0.1.0.x.", "node": ".a..b..." },
+    { "name": "req",  "wave": "01.....0" }
+  ],
+  "edge": [ "a~>b set" ],
+  "head": { "text": "Embed host demo" }
+}</textarea>
+      </div>
+      <div class="pane">
+        <div class="pane-head">
+          <span>Message log</span>
+          <span class="grow"></span>
+          <button id="b-clear">clear</button>
+        </div>
+        <pre id="log"></pre>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const editor = document.getElementById('editor');
+    const ta = document.getElementById('json');
+    const log = document.getElementById('log');
+    const size = document.getElementById('size');
+    const ready = document.getElementById('ready');
+    const readyText = document.getElementById('ready-text');
+    const frameWrap = document.getElementById('frame-wrap');
+
+    const t0 = Date.now();
+    const stamp = () => ((Date.now() - t0) / 1000).toFixed(2) + 's';
+
+    function append(dir, msg) {
+      const line = document.createElement('div');
+      line.className = 'log-line ' + dir;
+      const arrow = dir === 'in' ? '◀' : dir === 'out' ? '▶' : '·';
+      line.innerHTML = `<span class="time">${stamp()}</span> <span class="lt">${arrow}</span> ${escapeHtml(JSON.stringify(msg))}`;
+      log.appendChild(line);
+      log.scrollTop = log.scrollHeight;
+    }
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    function postToEditor(msg) {
+      append('out', msg);
+      editor.contentWindow.postMessage(msg, '*');
+    }
+
+    function updateSize() {
+      size.textContent = ta.value.length.toLocaleString() + ' chars';
+    }
+
+    // 1. When the iframe announces 'hello', send the initial JSON.
+    // 2. When it reports 'change', mirror into our textarea.
+    // 3. When the user edits the textarea, push 'setJson' downstream.
+
+    let suppressNextChange = false;
+
+    window.addEventListener('message', (ev) => {
+      if (ev.source !== editor.contentWindow) return;
+      const m = ev.data;
+      if (!m || typeof m !== 'object') return;
+      append('in', m);
+      if (m.type === 'hello') {
+        readyText.textContent = 'sending init…';
+        postToEditor({ type: 'init', payload: { initial: ta.value } });
+      } else if (m.type === 'ready') {
+        ready.classList.remove('loading');
+        ready.classList.add('ready');
+        readyText.classList.add('ready');
+        readyText.textContent = 'ready';
+        frameWrap.classList.add('ready');
+      } else if (m.type === 'change') {
+        // mirror the editor's JSON back into the textarea
+        suppressNextChange = true;
+        ta.value = m.payload.jsonText;
+        updateSize();
+      } else if (m.type === 'command') {
+        // host would handle save / export here
+        append('in', { handled: m.payload.type, note: 'host stub — would persist / export' });
+      }
+    });
+
+    ta.addEventListener('input', () => {
+      updateSize();
+      if (suppressNextChange) { suppressNextChange = false; return; }
+      // Push only if the JSON is valid — otherwise let the editor's own
+      // parser surface the error.
+      try {
+        JSON.parse(ta.value);
+        postToEditor({ type: 'setJson', payload: ta.value });
+      } catch (e) {
+        // silently wait for the user to finish typing
+      }
+    });
+
+    document.getElementById('b-send').addEventListener('click', () => {
+      postToEditor({ type: 'setJson', payload: ta.value });
+    });
+
+    document.getElementById('b-reset').addEventListener('click', () => {
+      const sample = {
+        signal: [
+          { name: 'clk',  wave: 'p......' },
+          { name: 'data', wave: 'x345=x.', data: ['A','B','C','sum'] },
+          { name: 'vld',  wave: '0.1..0.' },
+        ],
+        head: { text: 'Reset sample' },
+      };
+      ta.value = JSON.stringify(sample, null, 2);
+      updateSize();
+      postToEditor({ type: 'setJson', payload: ta.value });
+    });
+
+    document.getElementById('b-clear').addEventListener('click', () => {
+      log.innerHTML = '';
+    });
+
+    updateSize();
+  </script>
+</body>
+</html>

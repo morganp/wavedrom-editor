@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>WaveDrom · edit</title>
+  <link rel="stylesheet" href="bundle/embed.css" />
+  <style>
+    html, body, #root { height: 100%; margin: 0; }
+    :root[data-theme="dark"] {
+      --bg:     #1d2125; --panel:  #22272b; --ink:    #c7d1db;
+      --ink-2:  #9aa4ae; --ink-3:  #6b7681;
+      --line:   #2c333a; --line-2: #2c333a;
+      --grid:   #262c33; --grid-major: #2e3640;
+      --accent: #579dff; --warn:   #f5cd47;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="bundle/embed.js"></script>
+  <script type="module">
+    import { view } from '@forge/bridge';
+
+    const ctx   = await view.getContext();
+    document.documentElement.dataset.theme = ctx.themeState?.colorMode || 'light';
+
+    const initial = ctx.extension?.modal?.initial || '{}';
+    let latest = initial;
+
+    WavedromEditor.mount(document.getElementById('root'), {
+      initial,
+      embedded: true,
+      onChange: (_json, jsonText) => { latest = jsonText; },
+    });
+
+    view.on('submit', () => view.submit({ body: latest }));
+    view.on('cancel', () => view.close());
+  </script>
+</body>
+</html>

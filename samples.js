@@ -1,5 +1,5 @@
 // samples.js — common waveform templates
-window.WAVEDROM_SAMPLES = [
+export const SAMPLES = [
   {
     id: 'basic',
     label: 'Basic clock + data',

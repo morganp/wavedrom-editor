@@ -1,0 +1,29 @@
+## editor-page.vm — standalone editor page served by WavedromEditorServlet
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>WaveDrom Editor</title>
+  <link rel="stylesheet" href="/download/resources/com.example.wavedrom.wavedrom-editor:wavedrom-editor-bundle/embed.css" />
+  <style>
+    html, body, #root { height: 100%; margin: 0; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="/download/resources/com.example.wavedrom.wavedrom-editor:wavedrom-editor-bundle/embed.js"></script>
+  <script>
+    var contentId = '$contentId';
+    WavedromEditor.mount(document.getElementById('root'), {
+      initial: decodeURIComponent('$!{initial}'),
+      embedded: true,
+      onCommand: function(cmd) {
+        if (cmd.type === 'save' && window.opener) {
+          window.opener.postMessage({ type: 'wavedrom-save', body: cmd.payload.jsonText, contentId: contentId }, '*');
+          window.close();
+        }
+      },
+    });
+  </script>
+</body>
+</html>

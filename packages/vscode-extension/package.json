@@ -1,0 +1,71 @@
+{
+  "name": "wavedrom-editor",
+  "displayName": "WaveDrom Visual Editor",
+  "description": "Visual editor for WaveDrom timing-diagram JSON files.",
+  "version": "0.4.0",
+  "publisher": "Lizard-Spock",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/example/wavedrom-editor" },
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Visualization", "Other"],
+  "keywords": ["wavedrom", "timing", "diagram", "waveform", "verilog", "hdl"],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onCustomEditor:wavedrom.editor",
+    "onCommand:wavedrom.openAsDiagram",
+    "onLanguage:markdown"
+  ],
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "wavedrom.editor",
+        "displayName": "WaveDrom",
+        "selector": [
+          { "filenamePattern": "*.wavedrom.json" },
+          { "filenamePattern": "*.wd.json" }
+        ],
+        "priority": "default"
+      }
+    ],
+    "commands": [
+      {
+        "command": "wavedrom.openAsDiagram",
+        "title": "WaveDrom: Open as diagram",
+        "category": "WaveDrom"
+      },
+      {
+        "command": "wavedrom.editFencedBlock",
+        "title": "WaveDrom: Edit fenced block visually",
+        "category": "WaveDrom"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "when": "resourceExtname == .json && !inDebugMode",
+          "command": "wavedrom.openAsDiagram",
+          "group": "navigation"
+        }
+      ]
+    },
+    "languages": [
+      {
+        "id": "json",
+        "extensions": [".wavedrom.json", ".wd.json"]
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package",
+    "build:webview": "mkdir -p media && cp ../../dist/embed.iife.js media/embed.js && cp ../../dist/embed.css media/embed.css",
+    "vscode:prepublish": "npm run build:webview && npm run compile"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^2.22.0",
+    "typescript": "^5.3.0"
+  }
+}

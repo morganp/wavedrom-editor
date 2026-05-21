@@ -1,7 +1,4 @@
-// wave-render.jsx — pure helpers for waveform parsing and SVG path generation.
-// No React deps; exposed on window for the editor to consume.
-
-(function () {
+// wave-render.js — pure helpers for waveform parsing and SVG path generation.
   // ── characters ────────────────────────────────────────────────
   // Treat 'l/h/L/H' as 0/1 with optional arrows (we draw without arrows for clarity).
   // 'p/P/n/N' are clocks. 'x' is don't-care, 'z' is hi-Z.
@@ -264,9 +261,8 @@
     return { wave: arr.join(''), idx: target };
   }
 
-  window.WaveRender = {
-    parseWave, renderWave, waveLength, setCharAt, nextValue,
-    moveTransition, isWaveChar, logicLevel, CLOCK, LOGIC, BUS, SPECIAL,
-    TOGGLE_CYCLE,
-  };
-})();
+export {
+  parseWave, renderWave, waveLength, setCharAt, nextValue,
+  moveTransition, isWaveChar, logicLevel, CLOCK, LOGIC, BUS, SPECIAL,
+  TOGGLE_CYCLE,
+};

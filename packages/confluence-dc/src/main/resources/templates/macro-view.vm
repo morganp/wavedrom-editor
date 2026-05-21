@@ -1,0 +1,33 @@
+## macro-view.vm — inline view rendered by WavedromMacro.execute()
+<div class="wavedrom-macro-container"
+     id="$instanceId"
+     data-wavedrom-json="$json"
+     style="position:relative;padding:8px 4px;">
+  <div class="wavedrom-preview"></div>
+  #if($editable)
+  <button class="wavedrom-edit-btn"
+          type="button"
+          data-instance-id="$instanceId"
+          style="position:absolute;top:6px;right:6px;
+                 background:#fff;border:1px solid #d3d3d8;color:#36383c;
+                 font-size:12px;padding:4px 10px;border-radius:4px;
+                 cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.08);
+                 opacity:0;transition:opacity .15s;">
+    &#9998; Edit
+  </button>
+  #end
+</div>
+<script>
+(function() {
+  var container = document.getElementById('$instanceId');
+  if (!container) return;
+  container.addEventListener('mouseenter', function() {
+    var btn = container.querySelector('.wavedrom-edit-btn');
+    if (btn) btn.style.opacity = '1';
+  });
+  container.addEventListener('mouseleave', function() {
+    var btn = container.querySelector('.wavedrom-edit-btn');
+    if (btn) btn.style.opacity = '0';
+  });
+})();
+</script>

@@ -1,26 +1,10 @@
 // editor.jsx — main React app for the Wavedrom Editor
-const { useState, useEffect, useMemo, useRef, useCallback } = React;
-const { parseWave, renderWave, moveTransition, nextValue, TOGGLE_CYCLE } = window.WaveRender;
-
-// ── small icon set (inline SVG) ────────────────────────────────────
-const Icon = ({ d, size = 14 }) => (
-  <svg className="ico" viewBox="0 0 24 24" width={size} height={size}
-       fill="none" stroke="currentColor" strokeWidth="1.7"
-       strokeLinecap="round" strokeLinejoin="round">{d}</svg>
-);
-const ICONS = {
-  add:    <Icon d={<><path d="M12 5v14M5 12h14"/></>} />,
-  trash:  <Icon d={<><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13"/></>} />,
-  group:  <Icon d={<><path d="M3 6h7v12H3zM14 6h7v5h-7zM14 13h7v5h-7z"/></>} />,
-  undo:   <Icon d={<><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></>} />,
-  redo:   <Icon d={<><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/></>} />,
-  png:    <Icon d={<><path d="M4 16l4-4 4 4 8-8"/><rect x="3" y="3" width="18" height="18" rx="2"/></>} />,
-  svg:    <Icon d={<><path d="M4 4h16v16H4z"/><path d="M8 12h2l1 3 1-6 1 3h3"/></>} />,
-  samples:<Icon d={<><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></>} />,
-  cycleAdd:<Icon d={<><path d="M3 12h12M9 6l6 6-6 6"/><path d="M19 5v14"/></>} />,
-  cycleDel:<Icon d={<><path d="M21 12H9M15 6l-6 6 6 6"/><path d="M5 5v14"/></>} />,
-  edge:   <Icon d={<><path d="M4 17c4-10 12-10 16 0"/><path d="M16 17l4 0M20 13l0 4"/></>} />,
-};
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { parseWave, renderWave, moveTransition, nextValue, TOGGLE_CYCLE } from './wave-render.js';
+import { SAMPLES } from './samples.js';
+import { Icon, ICONS } from './icons.jsx';
+import { useTweaks, TweaksPanel, TweakSection, TweakSlider, TweakRadio } from './tweaks-panel.jsx';
+import { Toolbar, Workarea, Drawer, Inspector, SampleModal, DocPanel, CycleMenu } from './editor-views.jsx';
 
 // ── normalize spec for editor use (give every signal an id) ────────
 let __id = 0;
@@ -95,9 +79,11 @@ function totalCycles(spec) {
 }
 
 // ── App ────────────────────────────────────────────────────────────
-function App() {
-  const [t, setTweak] = useTweaks(window.TWEAK_DEFAULTS);
-  const [spec, setSpec] = useState(() => ensureIds(window.WAVEDROM_SAMPLES[3].spec));
+function App({ initial, onChange, onCommand, embedded, readonly, bridge } = {}) {
+  const [t, setTweak] = useTweaks({ cw: 40, rowH: 40, snap: 1 });
+  const [spec, setSpec] = useState(() => ensureIds(initial != null
+    ? (typeof initial === 'string' ? JSON.parse(initial) : initial)
+    : SAMPLES[3].spec));
   const [selectedId, setSelectedId] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(true);
   const [jsonText, setJsonText] = useState('');
@@ -141,9 +127,31 @@ function App() {
 
   // JSON sync — when spec changes, regenerate JSON text (without ids)
   useEffect(() => {
-    setJsonText(JSON.stringify(stripIds(spec), null, 2));
+    const stripped = stripIds(spec);
+    const text = JSON.stringify(stripped, null, 2);
+    setJsonText(text);
     setJsonError(null);
-  }, [spec]);
+    // Notify host (embedded mode). Skip the initial mount notification
+    // unless explicitly wanted — but we *do* fire on every spec change
+    // since the host wants to track edits.
+    if (onChange) {
+      try { onChange(stripped, text); } catch (e) { /* host handler bug */ }
+    }
+  }, [spec, onChange]);
+
+  // External setJson via the bridge (host-driven update). We mark the change
+  // as "skip push" so we don't pollute undo history with host-pushed edits.
+  useEffect(() => {
+    if (!bridge) return;
+    bridge.setJson = (j) => {
+      try {
+        const parsed = typeof j === 'string' ? JSON.parse(j) : j;
+        skipPush.current = true;
+        setSpec(ensureIds(parsed));
+      } catch (e) { /* invalid JSON from host */ }
+    };
+    return () => { if (bridge) delete bridge.setJson; };
+  }, [bridge]);
 
   // mutate helper that preserves identity
   const update = useCallback((mutator) => {
@@ -512,13 +520,16 @@ function App() {
 
   // ── samples ─────────────────────────────────────────────────
   const loadSample = (id) => {
-    const s = window.WAVEDROM_SAMPLES.find((x) => x.id === id);
+    const s = SAMPLES.find((x) => x.id === id);
     if (s) setSpec(ensureIds(s.spec));
     setShowSamples(false);
   };
 
   // ── save / load / copy JSON ─────────────────────────────────
+  // In embed mode, route through onCommand if the host provides one;
+  // else fall back to native browser download / file-picker / clipboard.
   const saveJson = () => {
+    if (onCommand) { onCommand({ type: 'save', payload: { json: stripIds(spec) } }); return; }
     download('wavedrom.json', JSON.stringify(stripIds(spec), null, 2), 'application/json');
   };
   const loadJson = () => {
@@ -700,8 +711,9 @@ ${body}
       {showSamples && <SampleModal close={() => setShowSamples(false)} load={loadSample} />}
       {tip && <div className="shadow-tip show">{tip}</div>}
 
-      {/* Tweaks panel */}
-      <TweaksPanel title="Tweaks">
+      {/* Tweaks panel — disabled in embed mode (host owns the chrome) */}
+      {!embedded && (
+        <TweaksPanel title="Tweaks">
         <TweakSection label="Layout" />
         <TweakSlider label="Cycle width" value={t.cw} min={16} max={120} step={2}
           onChange={(v) => setTweak('cw', v)} unit="px" />
@@ -712,6 +724,7 @@ ${body}
           options={['1', '0.5', '0.25']}
           onChange={(v) => setTweak('snap', parseFloat(v))} />
       </TweaksPanel>
+      )}
     </div>
   );
 }
@@ -722,6 +735,4 @@ function download(name, content, mime) {
   a.href = URL.createObjectURL(blob); a.download = name; a.click();
 }
 
-// expose for split files
-window.__WaveEditor = { App, Icon, ICONS, ensureIds, stripIds, flattenSignals,
-  totalCycles, download, newId };
+export { App, Icon, ICONS, ensureIds, stripIds, flattenSignals, totalCycles, download, newId };

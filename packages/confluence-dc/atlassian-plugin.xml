@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<atlassian-plugin key="${atlassian.plugin.key}" name="${project.name}" plugins-version="2">
+  <plugin-info>
+    <description>${project.description}</description>
+    <version>${project.version}</version>
+    <vendor name="${project.organization.name}" url="${project.organization.url}" />
+    <param name="plugin-icon">images/pluginIcon.png</param>
+    <param name="plugin-logo">images/pluginLogo.png</param>
+  </plugin-info>
+
+  <!--
+    Lightweight view resources: always loaded on pages that contain the macro.
+    view.js (6 KB) renders the SVG inline. dialog.js opens the AUI editor dialog
+    and lazy-loads the embed bundle on first edit click.
+  -->
+  <web-resource key="wavedrom-view-resources" name="WaveDrom view resources">
+    <resource type="download" name="view.js"   location="bundle/view.js" />
+    <resource type="download" name="dialog.js" location="dialog.js" />
+    <context>wavedrom.view</context>
+  </web-resource>
+
+  <!--
+    Full editor bundle: served as a downloadable resource; lazy-loaded by
+    dialog.js on first edit click so page views don't pay the 524 KB cost.
+  -->
+  <web-resource key="wavedrom-editor-bundle" name="WaveDrom editor bundle">
+    <dependency>com.atlassian.auiplugin:aui-dialog2</dependency>
+    <resource type="download" name="embed.css" location="bundle/embed.css" />
+    <resource type="download" name="embed.js"  location="bundle/embed.js"  />
+    <context>wavedrom.editor</context>
+  </web-resource>
+
+  <xhtml-macro key="wavedrom-macro" name="wavedrom"
+               class="com.example.wavedrom.WavedromMacro"
+               icon="/download/resources/${atlassian.plugin.key}/images/macroIcon.png">
+    <description>Embed a WaveDrom timing diagram with a visual editor.</description>
+    <category name="visuals" />
+    <parameters />
+  </xhtml-macro>
+
+  <!-- Standalone edit page, e.g. opened from a deep link or server-side redirect -->
+  <servlet key="wavedrom-editor-servlet" class="com.example.wavedrom.WavedromEditorServlet">
+    <url-pattern>/wavedrom/editor</url-pattern>
+  </servlet>
+
+  <component-import key="webResourceManager"
+                    interface="com.atlassian.plugin.webresource.WebResourceManager" />
+  <component-import key="templateRenderer"
+                    interface="com.atlassian.templaterenderer.TemplateRenderer" />
+</atlassian-plugin>
