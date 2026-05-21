@@ -37,6 +37,11 @@ npm run package
 
 Install in VS Code via **Extensions → ... → Install from VSIX**.
 
+## TODO
+
+- [ ] Build and test Confluence Cloud plugin (`packages/confluence-forge`)
+- [ ] Build and test Confluence Data Center / Server plugin (`packages/confluence-dc`)
+
 ## Downloads
 - Use **semantic versioning** in download zip filenames (e.g. `Wavedrom-Editor-v0.3.0.zip`).
 - Keep a short `CHANGELOG.md` at the project root listing what changed per version. Append a new entry when bumping.
