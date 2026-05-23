@@ -2,34 +2,27 @@ modules:
   macro:
     - key: wavedrom-macro
       resource: macro-view
+      resolver:
+        function: resolver
       title: WaveDrom diagram
       description: Embed a WaveDrom timing diagram with a visual editor.
-      icon: resource:icons/wavedrom.svg
-      config:
-        function: wavedrom-config-default
       properties:
         layout: full-width
 
   function:
-    - key: wavedrom-config-default
-      handler: index.defaultConfig
-    - key: wavedrom-load
-      handler: index.loadDiagram
-    - key: wavedrom-save
-      handler: index.saveDiagram
+    - key: resolver
+      handler: index.handler
 
 resources:
   - key: macro-view
-    path: resources/macro/
+    path: built/macro/
   - key: editor-modal
-    path: resources/editor/
-  - key: icons
-    path: resources/icons/
+    path: built/editor/
 
 app:
   runtime:
-    name: nodejs20.x
-  id: ari:cloud:ecosystem::app/REPLACE_WITH_REAL_APP_ID
+    name: nodejs22.x
+  id: ari:cloud:ecosystem::app/6d0e232c-8143-4f59-a4eb-10ab7200c80d
 
 permissions:
   scopes:

@@ -5,3 +5,5 @@ dist/
 *.vsix
 Wavedrom-Editor-v*.zip
 packages/vscode-extension/out/
+packages/confluence-forge/built/
+packages/confluence-forge/node_modules/

@@ -1,12 +1,18 @@
-// Forge function handlers for the WaveDrom Confluence Cloud macro.
+// Forge resolver for the WaveDrom Confluence Cloud macro.
 //
-// Persistence: each macro instance owns a UUID stored in its config.
-// The actual WaveJSON text is kept in Forge `storage.set(`diagram:<uuid>`)`.
-// This keeps the macro config tiny and side-steps the 32-bytes-of-config
-// soft limit while staying inside the `storage:app` scope.
+// Custom UI invokes from the iframe (via `invoke(key, payload)`) are
+// routed through this single resolver. Each `resolver.define()` registers
+// a key that matches the string passed in the iframe.
+//
+// Persistence: each macro instance has a stable Forge-assigned localId
+// passed in from the iframe as `payload.id`. The WaveJSON text is stored
+// at `storage.set(`diagram:<localId>`)`.
 
+import ResolverImport from '@forge/resolver';
 import { storage } from '@forge/api';
-import { randomUUID } from 'crypto';
+
+// Webpack CJS-interop fallback: some bundles expose the class on `.default`.
+const Resolver = ResolverImport?.default || ResolverImport;
 
 const DEFAULT_SPEC = {
   signal: [
@@ -17,33 +23,27 @@ const DEFAULT_SPEC = {
   head: { text: 'WaveDrom diagram' },
 };
 
-const keyFor = (uuid) => `diagram:${uuid}`;
+const keyFor = (id) => `diagram:${id}`;
 
-// Called once when the user inserts the macro. Mints a UUID, seeds default
-// JSON in storage, and returns the UUID as the macro's persistent config.
-export async function defaultConfig() {
-  const uuid = randomUUID();
-  await storage.set(keyFor(uuid), JSON.stringify(DEFAULT_SPEC, null, 2));
-  return { uuid };
-}
+const resolver = new Resolver();
 
-// Read the JSON for an existing macro instance. Returns the default spec
-// (and re-seeds storage) if the key is missing — handles page copy/duplicate.
-export async function loadDiagram(req) {
-  const { uuid } = req.payload || {};
-  if (!uuid) throw new Error('loadDiagram: missing uuid');
-  let body = await storage.get(keyFor(uuid));
+resolver.define('wavedrom-load', async ({ payload }) => {
+  const { id } = payload || {};
+  if (!id) throw new Error('wavedrom-load: missing id');
+  let body = await storage.get(keyFor(id));
   if (!body) {
     body = JSON.stringify(DEFAULT_SPEC, null, 2);
-    await storage.set(keyFor(uuid), body);
+    await storage.set(keyFor(id), body);
   }
   return { body };
-}
+});
 
-export async function saveDiagram(req) {
-  const { uuid, body } = req.payload || {};
-  if (!uuid) throw new Error('saveDiagram: missing uuid');
-  if (typeof body !== 'string') throw new Error('saveDiagram: body must be a string');
-  await storage.set(keyFor(uuid), body);
+resolver.define('wavedrom-save', async ({ payload }) => {
+  const { id, body } = payload || {};
+  if (!id) throw new Error('wavedrom-save: missing id');
+  if (typeof body !== 'string') throw new Error('wavedrom-save: body must be a string');
+  await storage.set(keyFor(id), body);
   return { ok: true };
-}
+});
+
+export const handler = resolver.getDefinitions();

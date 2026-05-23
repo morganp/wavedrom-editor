@@ -1,0 +1,24 @@
+html, body, #root { height: 100%; margin: 0; }
+:root[data-theme="dark"] {
+  --bg:     #1d2125;
+  --panel:  #22272b;
+  --ink:    #c7d1db;
+  --ink-2:  #9aa4ae;
+  --ink-3:  #6b7681;
+  --line:   #2c333a;
+  --line-2: #2c333a;
+  --grid:   #262c33;
+  --grid-major: #2e3640;
+  --accent: #579dff;
+  --warn:   #f5cd47;
+}
+.actions {
+  position: fixed; bottom: 12px; right: 12px; z-index: 1000;
+  display: flex; gap: 8px;
+}
+.actions button {
+  padding: 6px 14px; border-radius: 4px; border: 1px solid #ccd0d5;
+  background: #fff; cursor: pointer;
+  font: 13px -apple-system, system-ui, sans-serif;
+}
+.actions button.primary { background: #0c66e4; color: #fff; border-color: #0c66e4; }

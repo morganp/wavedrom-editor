@@ -3,6 +3,25 @@
 All notable changes to this project are documented here.
 Versions follow [Semantic Versioning](https://semver.org).
 
+## [0.5.0] — 2026-05-23
+
+### Confluence Forge (Cloud) plugin — first working end-to-end
+- Real app registered (`ari:cloud:ecosystem::app/6d0e232c-...`); deployed + installed on `lizard-spock.atlassian.net` development environment.
+- Custom UI HTML bundled via Vite (`packages/confluence-forge/src-ui/` → `built/`) so `@forge/bridge` bare imports resolve and inline `<style>` blocks are extracted (Forge CSP forbids `'unsafe-inline'`).
+- Backend rewritten as a `@forge/resolver` dispatcher (`wavedrom-load` / `wavedrom-save`) — Forge Custom UI `invoke()` requires the resolver pattern, not standalone function modules.
+- Webpack CJS-interop guard added around the default import of `@forge/resolver` (`_forge_resolver__WEBPACK_IMPORTED_MODULE_0__ is not a constructor` otherwise).
+- Macro instance identity moved from a config-dialog UUID to `ctx.extension.localId` — skips the config form entirely and works on first insert.
+- Modal flow corrected: `new Modal({ resource, context }).open()` from the macro view, `view.close()` from the editor, host receives the close event via `onClose`.
+- Editor wires both an explicit Save button and `onCommand({type:'save'})` so the embedded React app's toolbar save invokes the same persistence path.
+- Macro iframe sizes itself via `view.resize()` after each render (without it the macro is clipped and the Edit button can sit off-screen).
+- `manifest.yml` runtime bumped to `nodejs22.x` (20.x is now rejected by Forge).
+- Documented the non-obvious Forge gotchas under "Confluence Forge (Cloud) plugin — non-obvious gotchas" in `CLAUDE.md` so the next session skips the rediscovery loop.
+
+### Build tooling
+- New `packages/confluence-forge/vite.config.js` builds each Custom UI entry (`macro`, `editor`) into a self-contained directory under `built/`.
+- Root `npm run build:forge` now delegates to the package's `build` script (which runs the UI bundles then `build:forge:bundles` for the wave-render IIFEs).
+- `.gitignore` adds `packages/confluence-forge/built/` and `packages/confluence-forge/node_modules/`.
+
 ## [0.4.22] — 2026-05-23
 
 ### Confluence Forge (Cloud) plugin

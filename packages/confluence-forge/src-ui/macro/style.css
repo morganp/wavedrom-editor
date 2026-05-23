@@ -1,0 +1,16 @@
+html, body { margin: 0; padding: 0; background: transparent; font-family: -apple-system, system-ui, sans-serif; }
+.frame { position: relative; padding: 8px 4px 8px 4px; min-height: 60px; }
+.preview { width: 100%; }
+.preview svg { display: block; max-width: 100%; }
+.edit-btn {
+  position: absolute; top: 6px; right: 6px;
+  background: #fff; border: 1px solid #d3d3d8; color: #36383c;
+  font-size: 12px; padding: 4px 10px; border-radius: 4px;
+  cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  z-index: 10;
+}
+.edit-btn:hover { background: #f4f5f7; }
+.err {
+  color: #b13a3a; font-family: ui-monospace, monospace; font-size: 11px;
+  padding: 8px; border: 1px solid #e8c5c5; border-radius: 4px; background: #fdf6f3;
+}
