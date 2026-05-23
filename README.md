@@ -113,6 +113,13 @@ npm run package              # → wavedrom-editor-<version>.vsix
 
 Install in VS Code via **Extensions → ... → Install from VSIX**.
 
+#### Marketplace publishing (Lizard-Spock publisher)
+
+- Publisher dashboard (upload new `.vsix` here):
+  https://marketplace.visualstudio.com/manage/publishers/lizard-spock
+- Extension acquisition / install stats:
+  https://marketplace.visualstudio.com/manage/publishers/lizard-spock/extensions/wavedrom-editor/hub?_a=acquisition
+
 See [`packages/vscode-extension/README.md`](packages/vscode-extension/README.md) for details.
 
 ## License
