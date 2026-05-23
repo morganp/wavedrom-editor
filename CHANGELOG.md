@@ -3,6 +3,14 @@
 All notable changes to this project are documented here.
 Versions follow [Semantic Versioning](https://semver.org).
 
+## [0.6.1] — 2026-05-23
+
+### Confluence Forge plugin — official renderer wired into macro view
+- New `view-official.js` entry + `vite.view-official.config.js` produce `dist/view-official.iife.js` (~18 KB gzip) — IIFE of the upstream `wavedrom` package exposing the same `window.WavedromView` API as the native renderer.
+- `scripts/copy-forge.js` copies both `view.js` and `view-official.js` into the macro bundle directory; macro HTML loads them in order and stashes them as `WavedromViewNative` / `WavedromViewOfficial`.
+- Macro `main.js` gains an engine dropdown (Official / Native), defaulting to Official for fidelity with wavedrom.com. Choice persists per macro instance via the existing `wavedrom-save` invoke.
+- Resolver: persist engine alongside body under `engine:<localId>` with default `official`. `load` returns `{ body, engine }`; `save` accepts an optional `engine` field.
+
 ## [0.6.0] — 2026-05-23
 
 ### Renderer
