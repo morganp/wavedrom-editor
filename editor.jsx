@@ -797,8 +797,8 @@ ${body}
           options={['native', 'official']}
           onChange={(v) => setTweak('engine', v)} />
         <div style={{ fontSize: 10, color: 'var(--ink-3)', padding: '0 12px 8px' }}>
-          'official' uses the upstream wavedrom package (lazy-loaded ~18 KB gzip).
-          May fail in plugin hosts with strict CSP (no 'unsafe-eval').
+          'official' uses the upstream wavedrom package (lazy-loaded ~18 KB gzip)
+          for exact parity with wavedrom.com.
         </div>
       </TweaksPanel>
       )}

@@ -9,7 +9,7 @@ Versions follow [Semantic Versioning](https://semver.org).
 - Scaffold dual-renderer support: keep the in-house ~10 KB native renderer for live editing (it provides the interactive hit-boxes and handles) and add an opt-in path to the upstream `wavedrom` npm package (~50 KB gzip) for exact visual parity with wavedrom.com.
 - New `wave-render-official.js` wraps `wavedrom` behind the same `renderDiagram(jsonText) → svgString` signature as our `view.js`. Lazy-loaded via dynamic `import()` so callers only pay the bundle cost when the toggle is flipped.
 - Tweaks panel: new "Renderer" radio (`native` | `official`). SVG / PNG export paths now branch on the choice — `native` reads the live edit canvas (current behaviour), `official` renders fresh from the spec.
-- Note: the upstream `wavedrom` package uses `eval()` (its `eva.js`), so the `official` engine cannot run under hosts with strict CSP — VS Code webviews (`script-src 'nonce-...'`) and Forge Custom UI iframes block it. Warning surfaced inline in the tweaks panel.
+- Note: a Rollup warning surfaces `eval()` inside `wavedrom/lib/eva.js`. That codepath is only used by `processAll()` / `editorRefresh()` (DOM-scanning helpers we never invoke); our path calls `renderAny(0, source, waveSkin)` with a pre-parsed JSON object. CSP-strict hosts (VS Code, Forge) should be fine — the eval is in the bundle but unreachable at runtime.
 
 ## [0.5.0] — 2026-05-23
 
