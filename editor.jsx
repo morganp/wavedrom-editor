@@ -106,7 +106,7 @@ function jsonStringify(value, indent, depth = 0) {
 }
 
 function App({ initial, onChange, onCommand, embedded, readonly, bridge } = {}) {
-  const [t, setTweak] = useTweaks({ cw: 40, rowH: 40, snap: 1 });
+  const [t, setTweak] = useTweaks({ cw: 40, rowH: 40, snap: 1, engine: 'native' });
   const indent = useRef(typeof initial === 'string' ? detectIndent(initial) : 2);
   const [spec, setSpec] = useState(() => {
     if (initial == null) return ensureIds(SAMPLES[3].spec);
@@ -585,7 +585,42 @@ function App({ initial, onChange, onCommand, embedded, readonly, bridge } = {}) 
   };
 
   // ── export ──────────────────────────────────────────────────
+  // Render the current spec via the official wavedrom package (lazy
+  // import to avoid the ~50 KB cost when nobody uses it).
+  const renderOfficialSvg = async () => {
+    const { renderDiagram } = await import('./wave-render-official.js');
+    return renderDiagram(stripIds(spec));
+  };
+
+  const exportSvgOfficial = async () => {
+    const svg = await renderOfficialSvg();
+    download('waveform.svg', '<?xml version="1.0" encoding="UTF-8"?>\n' + svg, 'image/svg+xml');
+  };
+
+  const exportPngOfficial = async () => {
+    const svg = await renderOfficialSvg();
+    const img = new Image();
+    const url = 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+    await new Promise((r, rej) => { img.onload = r; img.onerror = rej; img.src = url; });
+    const dpr = 2;
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width * dpr;
+    canvas.height = img.height * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, img.width, img.height);
+    ctx.drawImage(img, 0, 0);
+    canvas.toBlob((b) => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(b);
+      a.download = 'waveform.png';
+      a.click();
+    }, 'image/png');
+  };
+
   const exportSvg = () => {
+    if (t.engine === 'official') { exportSvgOfficial(); return; }
     const node = document.querySelector('.work .canvas-col');
     if (!node) return;
     // Collect all svg elements and concatenate
@@ -619,6 +654,7 @@ ${body}
   };
 
   const exportPng = async () => {
+    if (t.engine === 'official') { exportPngOfficial(); return; }
     // Render all svg rows onto a canvas and download.
     const total = totalCycles(spec);
     const cw = t.cw;
@@ -756,6 +792,14 @@ ${body}
         <TweakRadio label="Snap" value={String(t.snap)}
           options={['1', '0.5', '0.25']}
           onChange={(v) => setTweak('snap', parseFloat(v))} />
+        <TweakSection label="Export" />
+        <TweakRadio label="Renderer" value={t.engine}
+          options={['native', 'official']}
+          onChange={(v) => setTweak('engine', v)} />
+        <div style={{ fontSize: 10, color: 'var(--ink-3)', padding: '0 12px 8px' }}>
+          'official' uses the upstream wavedrom package (lazy-loaded ~18 KB gzip).
+          May fail in plugin hosts with strict CSP (no 'unsafe-eval').
+        </div>
       </TweaksPanel>
       )}
     </div>

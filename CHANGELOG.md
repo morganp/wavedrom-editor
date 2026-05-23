@@ -3,6 +3,14 @@
 All notable changes to this project are documented here.
 Versions follow [Semantic Versioning](https://semver.org).
 
+## [0.6.0] — 2026-05-23
+
+### Renderer
+- Scaffold dual-renderer support: keep the in-house ~10 KB native renderer for live editing (it provides the interactive hit-boxes and handles) and add an opt-in path to the upstream `wavedrom` npm package (~50 KB gzip) for exact visual parity with wavedrom.com.
+- New `wave-render-official.js` wraps `wavedrom` behind the same `renderDiagram(jsonText) → svgString` signature as our `view.js`. Lazy-loaded via dynamic `import()` so callers only pay the bundle cost when the toggle is flipped.
+- Tweaks panel: new "Renderer" radio (`native` | `official`). SVG / PNG export paths now branch on the choice — `native` reads the live edit canvas (current behaviour), `official` renders fresh from the spec.
+- Note: the upstream `wavedrom` package uses `eval()` (its `eva.js`), so the `official` engine cannot run under hosts with strict CSP — VS Code webviews (`script-src 'nonce-...'`) and Forge Custom UI iframes block it. Warning surfaced inline in the tweaks panel.
+
 ## [0.5.0] — 2026-05-23
 
 ### Confluence Forge (Cloud) plugin — first working end-to-end
