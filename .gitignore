@@ -3,4 +3,5 @@ dist/
 .DS_Store
 *.local
 *.vsix
+Wavedrom-Editor-v*.zip
 packages/vscode-extension/out/

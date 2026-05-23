@@ -3,6 +3,16 @@
 All notable changes to this project are documented here.
 Versions follow [Semantic Versioning](https://semver.org).
 
+## [0.4.21] — 2026-05-23
+
+### Web distribution
+- Add `npm run build:web-zip` (`scripts/build-web-zip.sh`) — builds `dist/standalone/` and packages it as `Wavedrom-Editor-v<version>.zip` with a versioned top-level folder.
+- Document the built bundle as the sole supported web distribution path in `README.md` and `CLAUDE.md`.
+- Note legacy `Wavedrom Editor.html` as broken since v0.4.0 ES-module refactor (classic `<script>` tags cannot load `export`/`import` sources).
+
+### Repo
+- `.gitignore`: ignore `Wavedrom-Editor-v*.zip` build artifacts.
+
 ## [0.4.1] — 2026-05-21
 
 ### VS Code extension

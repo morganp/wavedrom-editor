@@ -2,7 +2,7 @@
   "name": "wavedrom-editor",
   "displayName": "WaveDrom Visual Editor",
   "description": "Visual editor for WaveDrom timing-diagram JSON files.",
-  "version": "0.4.20",
+  "version": "0.4.21",
   "publisher": "Lizard-Spock",
   "license": "MIT",
   "repository": { "type": "git", "url": "https://github.com/morganp/wavedrom-editor" },

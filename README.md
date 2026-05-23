@@ -30,7 +30,33 @@ A visual editor for [WaveDrom](https://wavedrom.com) timing-diagram JSON.
 
 ## Run the standalone editor
 
-Open `Wavedrom Editor.html` in any modern browser. No build step.
+Build once, then serve `dist/standalone/`:
+
+```sh
+npm install
+npm run build:standalone     # → dist/standalone/
+npm run preview              # local dev server
+```
+
+> Note: the legacy `Wavedrom Editor.html` (CDN React+Babel, no build step) is **broken** since the v0.4.0 ES-module refactor. Use the built bundle.
+
+## Package the web version for distribution
+
+```sh
+npm run build:web-zip        # → Wavedrom-Editor-v<version>.zip
+```
+
+The zip contains the full `dist/standalone/` tree:
+
+```
+dist/standalone/
+├─ index.html
+└─ assets/
+   ├─ index-<hash>.js
+   └─ index-<hash>.css
+```
+
+Unzip and serve from any static host (nginx, S3, GitHub Pages). No runtime dependencies. For subpath hosting, set `base: '/subpath/'` in `vite.config.js` before building.
 
 ## Try the embed contract
 
