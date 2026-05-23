@@ -1,0 +1,16 @@
+{
+  "name": "confluence-forge-wavedrom",
+  "version": "0.4.21",
+  "private": true,
+  "description": "WaveDrom Confluence Cloud (Forge) macro — visual timing-diagram editor.",
+  "license": "MIT",
+  "scripts": {
+    "build": "cd ../.. && npm run build:forge",
+    "deploy": "forge deploy",
+    "install:dev": "forge install"
+  },
+  "dependencies": {
+    "@forge/api": "^4.0.0",
+    "@forge/bridge": "^4.0.0"
+  }
+}

@@ -29,14 +29,18 @@
 
   <script src="bundle/view.js"></script>
   <script type="module">
-    import { view, invoke } from '@forge/bridge';
+    import { view, invoke, Modal } from '@forge/bridge';
 
     const previewEl = document.getElementById('preview');
     const editBtn   = document.getElementById('edit');
 
-    async function getBody() {
-      const ctx = await view.getContext();
-      return ctx.extension?.config?.body || '{}';
+    const ctx  = await view.getContext();
+    const uuid = ctx.extension?.config?.uuid;
+
+    async function load() {
+      if (!uuid) return '{}';
+      const { body } = await invoke('wavedrom-load', { uuid });
+      return body;
     }
 
     function render(jsonText) {
@@ -47,12 +51,18 @@
       }
     }
 
-    editBtn.addEventListener('click', async () => {
-      const current = await getBody();
-      await invoke('openEditorModal', { initial: current });
-    });
+    render(await load());
 
-    render(await getBody());
+    editBtn.addEventListener('click', async () => {
+      const initial = await load();
+      const modal = new Modal({
+        resource: 'editor-modal',
+        size: 'max',
+        context: { uuid, initial },
+        onClose: async () => { render(await load()); },
+      });
+      await modal.open();
+    });
   </script>
 </body>
 </html>

@@ -185,7 +185,7 @@ class WavedromEditorProvider implements vscode.CustomTextEditorProvider {
   <link rel="stylesheet" href="${uri('embed.css')}" />
 </head>
 <body>
-  <pre id="dbg" style="font:11px monospace;padding:4px;background:#222;color:#0f0;max-height:60px;overflow:auto">WaveDrom Visual Editor v0.4.21</pre>
+  <pre id="dbg" style="font:11px monospace;padding:4px;background:#222;color:#0f0;max-height:60px;overflow:auto">WaveDrom Visual Editor v0.4.22</pre>
   <div id="root"></div>
   <script nonce="${nonce}" src="${uri('embed.js')}"></script>
   <script nonce="${nonce}">

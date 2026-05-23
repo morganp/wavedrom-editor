@@ -3,6 +3,17 @@
 All notable changes to this project are documented here.
 Versions follow [Semantic Versioning](https://semver.org).
 
+## [0.4.22] — 2026-05-23
+
+### Confluence Forge (Cloud) plugin
+- Add `packages/confluence-forge/package.json` with `@forge/api` + `@forge/bridge` deps.
+- Fix `manifest.yml`: drop `render: native` (UI Kit syntax incompatible with Custom UI macro); declare `wavedrom-load` + `wavedrom-save` functions; trim scopes to `storage:app` only.
+- Rewrite `src/index.js`: `defaultConfig` mints a UUID and seeds `storage.set('diagram:<uuid>')` with the default WaveJSON; add `loadDiagram` + `saveDiagram` handlers.
+- Fix `resources/macro/index.html`: use `new Modal({ resource: 'editor-modal', context })` instead of invalid `invoke('openEditorModal')`; reload + re-render `onClose`.
+- Fix `resources/editor/index.html`: read `{ uuid, initial }` from `extension.modal.context`; add explicit Save/Cancel buttons that call `invoke('wavedrom-save')` then `view.close()` (modals use `close`, not the `view.submit` config flow).
+- Add `resources/icons/wavedrom.svg` placeholder icon (referenced by manifest).
+- Document storage trade-off vs draw.io (page-copy leaks edits — accepted), Forge CLI prereqs, deploy + tunnel commands in `confluence-forge/README.md`.
+
 ## [0.4.21] — 2026-05-23
 
 ### Web distribution
