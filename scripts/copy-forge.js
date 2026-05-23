@@ -23,8 +23,9 @@ const macroBundle  = resolve(macroBuilt,  'bundle');
 mkdirSync(editorBundle, { recursive: true });
 mkdirSync(macroBundle,  { recursive: true });
 
-cpSync(resolve(dist, 'embed.iife.js'), resolve(editorBundle, 'embed.js'));
-cpSync(resolve(dist, 'embed.css'),     resolve(editorBundle, 'embed.css'));
-cpSync(resolve(dist, 'view.iife.js'),  resolve(macroBundle,  'view.js'));
+cpSync(resolve(dist, 'embed.iife.js'),         resolve(editorBundle, 'embed.js'));
+cpSync(resolve(dist, 'embed.css'),             resolve(editorBundle, 'embed.css'));
+cpSync(resolve(dist, 'view.iife.js'),          resolve(macroBundle,  'view.js'));
+cpSync(resolve(dist, 'view-official.iife.js'), resolve(macroBundle,  'view-official.js'));
 
 console.log('Forge bundles copied into built/.');

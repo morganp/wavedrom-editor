@@ -5,8 +5,9 @@
 // a key that matches the string passed in the iframe.
 //
 // Persistence: each macro instance has a stable Forge-assigned localId
-// passed in from the iframe as `payload.id`. The WaveJSON text is stored
-// at `storage.set(`diagram:<localId>`)`.
+// passed in from the iframe as `payload.id`. We store WaveJSON text at
+// `diagram:<localId>` and the user's renderer preference at
+// `engine:<localId>` (one of 'native' | 'official', default 'official').
 
 import ResolverImport from '@forge/resolver';
 import { storage } from '@forge/api';
@@ -22,27 +23,33 @@ const DEFAULT_SPEC = {
   ],
   head: { text: 'WaveDrom diagram' },
 };
+const DEFAULT_ENGINE = 'official';
 
-const keyFor = (id) => `diagram:${id}`;
+const bodyKey   = (id) => `diagram:${id}`;
+const engineKey = (id) => `engine:${id}`;
 
 const resolver = new Resolver();
 
 resolver.define('wavedrom-load', async ({ payload }) => {
   const { id } = payload || {};
   if (!id) throw new Error('wavedrom-load: missing id');
-  let body = await storage.get(keyFor(id));
+  let body = await storage.get(bodyKey(id));
   if (!body) {
     body = JSON.stringify(DEFAULT_SPEC, null, 2);
-    await storage.set(keyFor(id), body);
+    await storage.set(bodyKey(id), body);
   }
-  return { body };
+  const engine = (await storage.get(engineKey(id))) || DEFAULT_ENGINE;
+  return { body, engine };
 });
 
 resolver.define('wavedrom-save', async ({ payload }) => {
-  const { id, body } = payload || {};
+  const { id, body, engine } = payload || {};
   if (!id) throw new Error('wavedrom-save: missing id');
   if (typeof body !== 'string') throw new Error('wavedrom-save: body must be a string');
-  await storage.set(keyFor(id), body);
+  await storage.set(bodyKey(id), body);
+  if (engine === 'native' || engine === 'official') {
+    await storage.set(engineKey(id), engine);
+  }
   return { ok: true };
 });
 

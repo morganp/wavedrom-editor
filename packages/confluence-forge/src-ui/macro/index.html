@@ -7,10 +7,22 @@
 </head>
 <body>
   <div class="frame">
-    <button class="edit-btn" id="edit">✎ Edit</button>
+    <div class="controls">
+      <select id="engine" title="Renderer">
+        <option value="official">Official</option>
+        <option value="native">Native</option>
+      </select>
+      <button class="edit-btn" id="edit">✎ Edit</button>
+    </div>
     <div class="preview" id="preview"></div>
   </div>
+  <!-- Both renderers expose `window.WavedromView.renderDiagram`.
+       Load native first, then official overwrites the global. We pick
+       which to invoke per-render based on the user's saved engine. -->
   <script src="./bundle/view.js"></script>
+  <script>window.WavedromViewNative = window.WavedromView;</script>
+  <script src="./bundle/view-official.js"></script>
+  <script>window.WavedromViewOfficial = window.WavedromView;</script>
   <script type="module" src="./main.js"></script>
 </body>
 </html>

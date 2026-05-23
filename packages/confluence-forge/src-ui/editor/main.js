@@ -3,11 +3,6 @@ import { view, invoke } from '@forge/bridge';
 const ctx = await view.getContext();
 document.documentElement.dataset.theme = ctx.themeState?.colorMode || 'light';
 
-// The Modal({context}) we open from the macro view should reach us via one of:
-//   ctx.extension.modal.context   (older docs)
-//   ctx.extension.modal           (some versions)
-//   ctx.context                   (Custom UI v2)
-// Try each and surface what we actually got, so misses are diagnosable.
 function pickModalCtx(ctx) {
   return (
     ctx?.extension?.modal?.context ||
@@ -20,6 +15,7 @@ function pickModalCtx(ctx) {
 const modalCtx = pickModalCtx(ctx) || {};
 const id      = modalCtx.id;
 const initial = modalCtx.initial || '{}';
+const engine  = modalCtx.engine || 'official';
 let latest = initial;
 
 async function persistAndClose() {
@@ -28,7 +24,7 @@ async function persistAndClose() {
     return;
   }
   try {
-    await invoke('wavedrom-save', { id, body: latest });
+    await invoke('wavedrom-save', { id, body: latest, engine });
   } catch (e) {
     alert('Save failed: ' + (e?.message || e));
     return;
