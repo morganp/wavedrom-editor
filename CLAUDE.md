@@ -81,7 +81,7 @@ Either delete `Wavedrom Editor.html` or rewrite it to use `<script type="module"
 ## TODO
 
 - [x] Build and test Confluence Cloud plugin (`packages/confluence-forge`) — v0.5.0, deployed to `lizard-spock.atlassian.net` development environment, edit + save round-trip verified
-- [ ] Build and test Confluence Data Center / Server plugin (`packages/confluence-dc`)
+- [ ] ~~Build and test Confluence Data Center / Server plugin (`packages/confluence-dc`)~~ — **deferred indefinitely**. Cloud-only strategy for now. DC requires a separate Maven + Java + atlas-sdk toolchain, separate Marketplace listing, and a server-side render path for PDF/Word export. Revisit only if on-prem customer demand appears.
 
 ## Confluence Forge (Cloud) plugin — non-obvious gotchas
 
